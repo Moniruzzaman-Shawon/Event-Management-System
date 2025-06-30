@@ -7,12 +7,10 @@ def home(request):
     return render(request, "home.html")
 
 def contact(request):
-    print("Contact view accessed")
-    return HttpResponse("Welcome to the contact section")
+    return render(request, "contact.html")
 
 def aboutUs(request):
-    print("AboutUs view accessed")
-    return HttpResponse("About us")
+    return render(request, "aboutus.html")
 
 def events(request):
     return render(request, "events.html")

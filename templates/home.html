@@ -1,57 +1,113 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Event Management Home</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href=" {% static  %}">
-  </head>
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Home | Triple Events{% endblock %}
+{% block content %}
+<div class="flex-grow pt-20">
+  <!-- Carousel -->
+  <div
+    class="my-10"
+    x-data="{
+    activeSlide: 1,
+    total: 5,
+    init() {
+      const next = () => {
+        this.activeSlide = this.activeSlide === this.total ? 1 : this.activeSlide + 1;
+        setTimeout(next, 3000);
+      };
+      setTimeout(next, 3000);
+    }
+  }"
+  x-init="init()"
+  >
+    <div class="relative h-64 md:h-96 overflow-hidden rounded-lg">
+      <template x-if="activeSlide === 1">
+        <img
+          src="{% static 'images/slide1.jpg' %}"
+          class="w-full h-full object-cover"
+        />
+      </template>
+      <template x-if="activeSlide === 2">
+        <img
+          src="{% static 'images/slide2.jpg' %}"
+          class="w-full h-full object-cover"
+        />
+      </template>
+      <template x-if="activeSlide === 3">
+        <img
+          src="{% static 'images/slide3.jpg' %}"
+          class="w-full h-full object-cover"
+        />
+      </template>
+      <template x-if="activeSlide === 4">
+        <img
+          src="{% static 'images/slide4.jpg' %}"
+          class="w-full h-full object-cover"
+        />
+      </template>
+      <template x-if="activeSlide === 5">
+        <img
+          src="{% static 'images/slide5.jpg' %}"
+          class="w-full h-full object-cover"
+        />
+      </template>
 
-  <body class="bg-gray-100 text-center p-10">
-    <!-- Navbar -->
-    <nav class="bg-white shadow p-4 ">
-      <div class="container mx-auto flex justify-between">
-        <div class="flex items-center space-x-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            class="w-6 h-6 text-blue-500"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"
-            />
-          </svg>
+      <!-- Navigation Buttons -->
+      <button
+        @click="activeSlide = activeSlide === 1 ? total : activeSlide - 1"
+        class="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full shadow"
+      >
+        <svg
+          class="w-6 h-6 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+      <button
+        @click="activeSlide = activeSlide === total ? 1 : activeSlide + 1"
+        class="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full shadow"
+      >
+        <svg
+          class="w-6 h-6 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+    </div>
 
-          <a href="/" class="text-xl font-bold text-blue-600">Triple Time</a>
-        </div>
-        <div class="space-x-4">
-          <a href="/" class="text-gray-600 hover:text-blue-500">Home</a>
-          <a href="/events/" class="text-gray-600 hover:text-blue-500"
-            >Events</a
-          >
-          <a href="/contact/" class="text-gray-600 hover:text-blue-500"
-            >Contact</a
-          >
-          <a href="/aboutus/" class="text-gray-600 hover:text-blue-500"
-            >About Us</a
-          >
-        </div>
-      </div>
-    </nav>
+    <!-- Dots -->
+    <div class="flex justify-center mt-4 space-x-2">
+      <template x-for="i in total" :key="i">
+        <button
+          class="w-4 h-4 rounded-full"
+          :class="{ 'bg-blue-500': activeSlide === i, 'bg-blue-200': activeSlide !== i }"
+          @click="activeSlide = i"
+        ></button>
+      </template>
+    </div>
+  </div>
 
-    <main>
-
-      <h1 class="text-4xl font-bold text-blue-600">
-        Welcome to the Event Management System
-      </h1>
-      <p class="text-lg mt-4 text-gray-700">
-        Plan, manage, and organize your events effortlessly.
-      </p>
-    </main>
-  </body>
-</html>
+  <!-- Welcome Message -->
+  <div class="mt-10 mb-32">
+    <h1 class="text-4xl font-bold text-blue-600">Welcome to Triple Events</h1>
+    <p class="text-lg mt-4 text-gray-700 max-w-xl mx-auto">
+      Plan, manage, and organize your events effortlessly.
+    </p>
+  </div>
+</div>
+{% endblock %}
