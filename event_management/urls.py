@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from events.views import home
 from events.views import contact, aboutUs, events
-from events.urls import show_event
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
