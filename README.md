@@ -27,7 +27,7 @@ A web-based Event Management System built with **Django**, allowing users to cre
 
 ## 🔧 Setup Instructions
 
-### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/your-username/event-management-system.git
 cd event-management-system
@@ -38,7 +38,7 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 
-
+````
 ### 🌐 Live Demo
 
 🚀 Check out the live deployed version of the project:  
