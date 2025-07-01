@@ -1,33 +1,35 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .models import Event, Participant, Category
 from .forms import EventForm, ParticipantForm, CategoryForm
-from django.shortcuts import get_object_or_404, redirect, render
-
-
 
 
 def home(request):
     return render(request, "home.html")
 
+
 def contact(request):
     return render(request, "contact.html")
+
 
 def aboutUs(request):
     return render(request, "aboutus.html")
 
+
 def events(request):
     return render(request, "events.html")
 
+
 def show_event(request):
     return render(request, "show_event.html")
+
 
 def dashboard_view(request):
     today = timezone.localdate()
 
     # Calculate stats
     total_events = Event.objects.count()
-    total_participants = Participant.objects.count()  
+    total_participants = Participant.objects.count()
     upcoming_events = Event.objects.filter(date__gt=today).count()
     past_events = Event.objects.filter(date__lt=today).count()
 
@@ -57,7 +59,8 @@ def dashboard_view(request):
     }
     return render(request, "dashboard/dashboard_view.html", context)
 
-    # add a new event
+
+# Add a new event
 def add_event(request):
     if request.method == 'POST':
         form = EventForm(request.POST)
@@ -83,12 +86,14 @@ def add_event(request):
 
     return render(request, 'events/add_event.html', {'form': form})
 
-# show all 
+
+# Show all events
 def all_events(request):
     events = Event.objects.select_related('category').prefetch_related('participants').order_by('-date', '-time')
     return render(request, 'events/all_events.html', {'events': events})
 
-# search event
+
+# Search event
 def search_events(request):
     query = request.GET.get('q', '')
     events = Event.objects.all()
@@ -101,7 +106,8 @@ def search_events(request):
         'query': query,
     })
 
-# update event
+
+# Update event
 def edit_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
@@ -131,6 +137,7 @@ def participant_list(request):
     participants = Participant.objects.all()
     return render(request, "participants/participant_list.html", {"participants": participants})
 
+
 # Add participant
 def add_participant(request):
     if request.method == "POST":
@@ -141,6 +148,7 @@ def add_participant(request):
     else:
         form = ParticipantForm()
     return render(request, "participants/add_participant.html", {"form": form})
+
 
 # Edit participant
 def edit_participant(request, participant_id):
@@ -154,22 +162,23 @@ def edit_participant(request, participant_id):
         form = ParticipantForm(instance=participant)
     return render(request, "participants/edit_participant.html", {"form": form})
 
+
 # Delete participant
-
-
 def delete_participant(request, participant_id):
     participant = get_object_or_404(Participant, id=participant_id)
-    
+
     if request.method == 'POST':
         participant.delete()
         return redirect('participant_list')
 
     return render(request, 'participants/delete_participant_confirm.html', {'participant': participant})
 
+
 # List all categories
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'categories/category_list.html', {'categories': categories})
+
 
 # Add category
 def add_category(request):
@@ -182,6 +191,7 @@ def add_category(request):
         form = CategoryForm()
     return render(request, 'categories/add_category.html', {'form': form})
 
+
 # Edit category
 def edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
@@ -193,6 +203,7 @@ def edit_category(request, category_id):
     else:
         form = CategoryForm(instance=category)
     return render(request, 'categories/edit_category.html', {'form': form, 'category': category})
+
 
 # Delete category
 def delete_category(request, category_id):
