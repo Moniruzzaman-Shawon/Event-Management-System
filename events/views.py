@@ -1,10 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from django.utils import timezone
 from .models import Event, Participant, Category
-from django.shortcuts import redirect
-from .forms import EventForm
-from django.shortcuts import get_object_or_404
-from .forms import ParticipantForm
+from .forms import EventForm, ParticipantForm, CategoryForm
+from django.shortcuts import get_object_or_404, redirect, render
 
 
 
@@ -157,8 +155,7 @@ def edit_participant(request, participant_id):
     return render(request, "participants/edit_participant.html", {"form": form})
 
 # Delete participant
-from django.shortcuts import get_object_or_404, redirect, render
-from .models import Participant
+
 
 def delete_participant(request, participant_id):
     participant = get_object_or_404(Participant, id=participant_id)
@@ -168,3 +165,39 @@ def delete_participant(request, participant_id):
         return redirect('participant_list')
 
     return render(request, 'participants/delete_participant_confirm.html', {'participant': participant})
+
+# List all categories
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, 'categories/category_list.html', {'categories': categories})
+
+# Add category
+def add_category(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('category_list')
+    else:
+        form = CategoryForm()
+    return render(request, 'categories/add_category.html', {'form': form})
+
+# Edit category
+def edit_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            return redirect('category_list')
+    else:
+        form = CategoryForm(instance=category)
+    return render(request, 'categories/edit_category.html', {'form': form, 'category': category})
+
+# Delete category
+def delete_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        category.delete()
+        return redirect('category_list')
+    return render(request, 'categories/delete_category_confirm.html', {'category': category})
