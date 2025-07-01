@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Participants{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Participants</h1>
+<a href="{% url 'add_participant' %}" class="bg-green-500 text-white px-4 py-2 rounded">+ Add Participant</a>
+
+<table class="min-w-full mt-6 border text-sm">
+  <thead class="bg-gray-100">
+    <tr>
+      <th class="px-4 py-2 text-left">Name</th>
+      <th class="px-4 py-2 text-left">Email</th>
+      <th class="px-4 py-2 text-left">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for participant in participants %}
+    <tr class="border-t">
+      <td class="px-4 py-2">{{ participant.name }}</td>
+      <td class="px-4 py-2">{{ participant.email }}</td>
+      <td class="px-4 py-2">
+        <a href="{% url 'edit_participant' participant.id %}" class="text-blue-600">Edit</a> |
+        <a href="{% url 'delete_participant' participant.id %}" class="text-red-600">Delete</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="3" class="px-4 py-2 text-center text-gray-500">No participants found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

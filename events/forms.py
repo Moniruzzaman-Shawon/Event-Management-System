@@ -1,5 +1,7 @@
 from django import forms
 from .models import Event
+from .models import Participant
+
 
 class EventForm(forms.ModelForm):
     class Meta:
@@ -10,3 +12,8 @@ class EventForm(forms.ModelForm):
             'time': forms.TimeInput(attrs={'type': 'time'}),
             'participants': forms.SelectMultiple(attrs={'size': 6}),
         }
+
+class ParticipantForm(forms.ModelForm):
+    class Meta:
+        model = Participant
+        fields = ['name', 'email']

@@ -3,6 +3,9 @@ from django.utils import timezone
 from .models import Event, Participant, Category
 from django.shortcuts import redirect
 from .forms import EventForm
+from django.shortcuts import get_object_or_404
+from .forms import ParticipantForm
+
 
 
 
@@ -82,12 +85,12 @@ def add_event(request):
 
     return render(request, 'events/add_event.html', {'form': form})
 
-
+# show all 
 def all_events(request):
     events = Event.objects.select_related('category').prefetch_related('participants').order_by('-date', '-time')
     return render(request, 'events/all_events.html', {'events': events})
 
-
+# search event
 def search_events(request):
     query = request.GET.get('q', '')
     events = Event.objects.all()
@@ -99,3 +102,69 @@ def search_events(request):
         'events': events,
         'query': query,
     })
+
+# update event
+def edit_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    if request.method == "POST":
+        form = EventForm(request.POST, instance=event)
+        if form.is_valid():
+            form.save()
+            return redirect('dashboard')
+    else:
+        form = EventForm(instance=event)
+
+    return render(request, 'events/edit_event.html', {'form': form, 'event': event})
+
+
+def delete_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+
+    if request.method == "POST":
+        event.delete()
+        return redirect('dashboard')
+
+    return render(request, 'events/delete_event_confirm.html', {'event': event})
+
+
+# List participants
+def participant_list(request):
+    participants = Participant.objects.all()
+    return render(request, "participants/participant_list.html", {"participants": participants})
+
+# Add participant
+def add_participant(request):
+    if request.method == "POST":
+        form = ParticipantForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('participant_list')
+    else:
+        form = ParticipantForm()
+    return render(request, "participants/add_participant.html", {"form": form})
+
+# Edit participant
+def edit_participant(request, participant_id):
+    participant = get_object_or_404(Participant, id=participant_id)
+    if request.method == "POST":
+        form = ParticipantForm(request.POST, instance=participant)
+        if form.is_valid():
+            form.save()
+            return redirect('participant_list')
+    else:
+        form = ParticipantForm(instance=participant)
+    return render(request, "participants/edit_participant.html", {"form": form})
+
+# Delete participant
+from django.shortcuts import get_object_or_404, redirect, render
+from .models import Participant
+
+def delete_participant(request, participant_id):
+    participant = get_object_or_404(Participant, id=participant_id)
+    
+    if request.method == 'POST':
+        participant.delete()
+        return redirect('participant_list')
+
+    return render(request, 'participants/delete_participant_confirm.html', {'participant': participant})
