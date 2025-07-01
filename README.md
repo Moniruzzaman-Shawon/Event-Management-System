@@ -6,49 +6,6 @@ A web-based Event Management System built with **Django**, allowing users to cre
 
 ## 🚀 Features
 
-- Add, edit, delete events
-- Categorize events (Tech, Health, Culture, etc.)
-- View upcoming and past events
-- Participant registration
-- Admin dashboard for event management
-- Contact and About pages
-- Responsive UI with Tailwind CSS (optional)
-
----
-
-## 🛠️ Tech Stack
-
-- **Backend**: Django (Python)
-- **Frontend**: HTML, CSS (Tailwind optional), Django Templates
-- **Database**: SQLite (default)
-- **Others**: Django Admin, Bootstrap (optional), Git
-
----
-
-## 🔧 Setup Instructions
-
-
-```bash
-git clone https://github.com/your-username/event-management-system.git
-cd event-management-system
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-
-````
-### 🌐 Live Demo
-
-🚀 Check out the live deployed version of the project:  
-🔗 [https://event-management-system-n5em.onrender.com/](https://event-management-system-n5em.onrender.com/)
-
-> Hosted on **Render** for demonstration purposes. Feel free to explore event listings, pages, and features.
-
-
-## 🚀 Features
-
 ### ✅ 1. Data Models
 - `Event`: name, description, date, time, location, and linked category.
 - `Participant`: name, email, and ManyToMany relation with Event.
@@ -83,3 +40,38 @@ python manage.py runserver
 
 ### ✅ 6. Search Functionality
 - Search events by **name** or **location** using case-insensitive queries (`icontains`).
+
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend**: Django (Python)
+- **Frontend**: HTML, CSS (Tailwind optional), Django Templates
+- **Database**: SQLite (default)
+- **Others**: Django Admin, Bootstrap (optional), Git
+
+---
+
+## 🔧 Setup Instructions
+
+
+```bash
+git clone https://github.com/your-username/event-management-system.git
+cd event-management-system
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+
+````
+### 🌐 Live Demo
+
+🚀 Check out the live deployed version of the project:  
+🔗 [https://event-management-system-n5em.onrender.com/](https://event-management-system-n5em.onrender.com/)
+
+> Hosted on **Render** for demonstration purposes. Feel free to explore event listings, pages, and features.
+
+
