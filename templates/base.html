@@ -41,6 +41,7 @@
           </a>
           <a href="/" class="text-xl font-bold text-blue-600">Triple Events</a>
         </div>
+
         <div class="space-x-4 hidden sm:flex">
           <a href="/" class="text-gray-600 hover:text-blue-500">Home</a>
           <div x-data="{ open: false }" class="relative">
@@ -87,13 +88,17 @@
           <a href="/events/dashboard/" class="text-gray-600 hover:text-blue-500"
             >Dashboard</a
           >
-          
 
           <a href="/contact/" class="text-gray-600 hover:text-blue-500"
             >Contact</a
           >
           <a href="/aboutus/" class="text-gray-600 hover:text-blue-500"
             >About Us</a
+          >
+          <a
+            href="{% url 'search_events' %}"
+            class="text-gray-600 hover:text-blue-500"
+            >Search</a
           >
         </div>
       </div>
@@ -119,7 +124,9 @@
           <!-- Navigation Links -->
           <nav class="space-x-4 text-sm">
             <a href="/" class="hover:text-blue-600 transition">Home</a>
-            <a href="/events/all_events" class="hover:text-blue-600 transition">Events</a>
+            <a href="/events/all_events" class="hover:text-blue-600 transition"
+              >Events</a
+            >
             <a href="/events/dashboard/" class="hover:text-blue-600 transition"
               >Dashboard</a
             >

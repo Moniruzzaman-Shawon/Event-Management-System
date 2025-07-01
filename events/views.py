@@ -86,3 +86,16 @@ def add_event(request):
 def all_events(request):
     events = Event.objects.select_related('category').prefetch_related('participants').order_by('-date', '-time')
     return render(request, 'events/all_events.html', {'events': events})
+
+
+def search_events(request):
+    query = request.GET.get('q', '')
+    events = Event.objects.all()
+
+    if query:
+        events = events.filter(name__icontains=query)
+
+    return render(request, 'events/search_events.html', {
+        'events': events,
+        'query': query,
+    })

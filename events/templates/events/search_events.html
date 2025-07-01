@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Search Events{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-4">Search Events</h1>
+
+  <form method="GET" class="mb-6">
+    <input
+      type="text"
+      name="q"
+      value="{{ query }}"
+      placeholder="Search by event name..."
+      class="border rounded p-2 w-64"
+    />
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Search</button>
+  </form>
+
+  {% if events %}
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for event in events %}
+        <div class="border p-4 rounded shadow">
+          <h2 class="text-xl font-semibold">{{ event.name }}</h2>
+          <p class="text-gray-600">{{ event.date }} at {{ event.time }}</p>
+          <p>{{ event.description|default:"No description" }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-red-500">No events found for "{{ query }}".</p>
+  {% endif %}
+{% endblock %}
