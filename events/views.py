@@ -81,3 +81,8 @@ def add_event(request):
         form = EventForm()
 
     return render(request, 'events/add_event.html', {'form': form})
+
+
+def all_events(request):
+    events = Event.objects.select_related('category').prefetch_related('participants').order_by('-date', '-time')
+    return render(request, 'events/all_events.html', {'events': events})
