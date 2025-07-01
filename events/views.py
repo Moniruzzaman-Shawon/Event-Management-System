@@ -57,7 +57,7 @@ def dashboard_view(request):
         "filter_type": filter_type,
         "today": today,
     }
-    return render(request, "dashboard/dashboard_view.html", context)
+    return render(request, "events/dashboard_view.html", context)
 
 
 # Add a new event
