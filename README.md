@@ -48,13 +48,12 @@ A web-based Event Management System built with **Django**, allowing users to cre
 
 - **Backend**: Django (Python)
 - **Frontend**: HTML, CSS (Tailwind optional), Django Templates
-- **Database**: SQLite (default)
-- **Others**: Django Admin, Bootstrap (optional), Git
+- **Database**: PostgreSQL
+- **Tools**: Django Admin, Git, Render (Deployment)
 
 ---
 
 ## 🔧 Setup Instructions
-
 
 ```bash
 git clone https://github.com/your-username/event-management-system.git
@@ -67,6 +66,35 @@ python manage.py createsuperuser
 python manage.py runserver
 
 ````
+
+## 🧩 PostgreSQL Setup (Local)
+
+```
+psql
+CREATE DATABASE eventdb;
+CREATE USER eventuser WITH PASSWORD 'yourpassword';
+ALTER ROLE eventuser SET client_encoding TO 'utf8';
+ALTER ROLE eventuser SET default_transaction_isolation TO 'read committed';
+ALTER ROLE eventuser SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE eventdb TO eventuser;
+
+```
+
+### Update settings.py:
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'eventdb',
+        'USER': 'eventuser',
+        'PASSWORD': 'yourpassword',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+```
+
 ### 🌐 Live Demo
 
 🚀 Check out the live deployed version of the project:  
