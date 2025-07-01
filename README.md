@@ -95,6 +95,12 @@ DATABASES = {
 
 ```
 
+### Run migrations:
+```
+python manage.py migrate
+
+```
+
 ### 🌐 Live Demo
 
 🚀 Check out the live deployed version of the project:  
