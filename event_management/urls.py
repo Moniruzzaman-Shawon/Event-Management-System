@@ -15,6 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.conf import settings
 from django.urls import path, include
 from events.views import home
 from events.views import contact, aboutUs, events
@@ -29,3 +30,8 @@ urlpatterns = [
     path('events/', include("events.urls")),  
       
 ]
+
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
