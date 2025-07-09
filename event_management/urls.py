@@ -28,7 +28,8 @@ urlpatterns = [
     path('events/', events),
     path('aboutus/', aboutUs),  
     path('events/', include("events.urls")),  
-      
+    path('users/', include('users.urls')), 
+    
 ]
 
 
