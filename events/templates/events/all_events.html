@@ -6,14 +6,14 @@
 
   <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for event in events %}
-      <div class="border rounded-lg p-4 shadow hover:shadow-lg transition">
+      <a href="{% url 'event_detail' event.id %}" class="block border rounded-lg p-4 shadow hover:shadow-lg transition no-underline hover:no-underline text-inherit">
         <h2 class="text-xl font-semibold">{{ event.name }}</h2>
         <p class="text-sm text-gray-600">{{ event.date }} at {{ event.time }}</p>
         <p class="text-gray-700 mt-1">{{ event.description|default:"No description" }}</p>
         <p class="text-sm mt-2 text-blue-600 font-medium">Category: {{ event.category.name }}</p>
         <p class="text-sm text-gray-600">Location: {{ event.location }}</p>
         <p class="text-sm text-green-600 mt-1">Participants: {{ event.participants.count }}</p>
-      </div>
+      </a>
     {% empty %}
       <p>No events found.</p>
     {% endfor %}

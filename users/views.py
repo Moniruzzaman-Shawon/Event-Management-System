@@ -1,16 +1,26 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from django.utils import timezone
-
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from events.models import Event
+from django.contrib.auth.forms import UserChangeForm
 
 
-# Utility to get user role based on groups
+# Group check utility
+def is_admin(user):
+    return user.is_superuser or user.groups.filter(name="Admin").exists()
+
+def is_organizer(user):
+    return is_admin(user) or user.groups.filter(name="Organizer").exists()
+
+def is_participant(user):
+    return is_admin(user) or user.groups.filter(name="Participant").exists()
+
+
 def get_user_role(user):
     if user.groups.filter(name="Admin").exists():
         return "admin"
@@ -21,17 +31,14 @@ def get_user_role(user):
     return None
 
 
-# Signup view
 def signup_view(request):
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Add new user to Participant group by default
             participant_group, _ = Group.objects.get_or_create(name="Participant")
             user.groups.add(participant_group)
             login(request, user)
-
             role = get_user_role(user)
             if role == "admin":
                 return redirect("admin_dashboard")
@@ -39,13 +46,12 @@ def signup_view(request):
                 return redirect("organizer_dashboard")
             elif role == "participant":
                 return redirect("participant_dashboard")
-            return redirect("home")  # fallback redirect
+            return redirect("home")
     else:
         form = CustomUserCreationForm()
     return render(request, "users/signup.html", {"form": form})
 
 
-# Custom login view with redirect by role
 class CustomLoginView(LoginView):
     authentication_form = CustomAuthenticationForm
     template_name = "users/login.html"
@@ -63,27 +69,59 @@ class CustomLoginView(LoginView):
         return redirect("home")
 
 
-# Logout view
 class CustomLogoutView(LogoutView):
     next_page = reverse_lazy("login")
 
 
-# Admin dashboard view
+# participant_list
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Admin").exists())
+@user_passes_test(lambda u: u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+def participant_list(request):
+    participants = User.objects.filter(groups__name="Participant")
+    return render(request, "users/participant_list.html", {"participants": participants})
+
+
+# edit_participant
+
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+def edit_participant(request, user_id):
+    user = get_object_or_404(User, id=user_id, groups__name="Participant")
+    if request.method == "POST":
+        form = UserChangeForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect("participant_list")
+    else:
+        form = UserChangeForm(instance=user)
+    return render(request, "users/edit_participant.html", {"form": form, "user": user})
+
+
+# delete_participant
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+def delete_participant(request, user_id):
+    user = get_object_or_404(User, id=user_id, groups__name="Participant")
+    if request.method == "POST":
+        user.delete()
+        return redirect("participant_list")
+    return render(request, "users/delete_participant_confirm.html", {"user": user})
+
+
+
+# ---------------dashboard----------------
+
+@login_required
+@user_passes_test(is_admin)
 def admin_dashboard(request):
     return render(request, "users/admin_dashboard.html")
 
 
-# Organizer dashboard view
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def organizer_dashboard(request):
     today = timezone.localdate()
-
-    # Fetch events created by the organizer
     events = Event.objects.filter(creator=request.user).prefetch_related('participants').order_by('date', 'time')
-
     total_events = events.count()
     upcoming_events = events.filter(date__gt=today).count()
     past_events = events.filter(date__lt=today).count()
@@ -100,22 +138,14 @@ def organizer_dashboard(request):
     return render(request, "users/organizer_dashboard.html", context)
 
 
-# Participant dashboard view
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Participant").exists())
+@user_passes_test(is_participant)
 def participant_dashboard(request):
-    return render(request, "users/participant_dashboard.html")
-
-
-# Redirect user to dashboard after login based on role
-@login_required
-def dashboard_redirect(request):
     user = request.user
-    if user.groups.filter(name='Organizer').exists():
-        return redirect('organizer_dashboard')
-    elif user.groups.filter(name='Participant').exists():
-        return redirect('participant_dashboard')
-    elif user.is_superuser or user.groups.filter(name='Admin').exists():
-        return redirect('admin_dashboard')
-    else:
-        return redirect('home')  # Or any fallback view
+    rsvped_events = Event.objects.filter(participants=user).order_by('date', 'time')
+
+    context = {
+        'rsvped_events': rsvped_events,
+    }
+    return render(request, "users/participant_dashboard.html", context)
+

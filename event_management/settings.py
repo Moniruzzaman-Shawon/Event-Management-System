@@ -14,6 +14,8 @@ from pathlib import Path
 import socket
 import dj_database_url
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -95,15 +97,13 @@ WSGI_APPLICATION = 'event_management.wsgi.application'
 #     }
 # }
 
-
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://event_management_db_cchc_user:66fXEQWhHiZynHak31HVVBFBYNc8btUc@dpg-d1hunore5dus739h1tlg-a.oregon-postgres.render.com/event_management_db_cchc',
+        default=os.getenv('DATABASE_URL'),
         conn_max_age=600,
-        ssl_require=True  
+        ssl_require=True,
     )
 }
-
 
 # # # for postgresql
 
@@ -141,6 +141,16 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/login/' 
+
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'moniruzzaman.shawon@northsouth.edu'
+EMAIL_HOST_PASSWORD = 'fgtltxzxficmizjl'
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 
 
 # Internationalization

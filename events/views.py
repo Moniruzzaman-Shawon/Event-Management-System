@@ -1,10 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mail
 from .models import Event, Category
 from .forms import EventForm, CategoryForm
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.exceptions import PermissionDenied
-from django.contrib.auth.models import User  # Import User model
+from django.conf import settings
+from .models import Event
+from django.contrib import messages
+
+
+
+
+# Group check utilities
+def is_admin(user):
+    return user.is_superuser or user.groups.filter(name="Admin").exists()
+
+def is_organizer(user):
+    return is_admin(user) or user.groups.filter(name="Organizer").exists()
+
+def is_participant(user):
+    return is_admin(user) or user.groups.filter(name="Participant").exists()
 
 
 def home(request):
@@ -23,25 +40,20 @@ def events(request):
     return render(request, "events.html")
 
 
-def show_event(request):
-    return render(request, "show_event.html")
-
+def show_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    return render(request, 'events/show_event.html', {'event': event})
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def dashboard_view(request):
-    if not request.user.groups.filter(name="Organizer").exists():
-        raise PermissionDenied  # Or redirect
-
     today = timezone.localdate()
 
-    # Calculate stats
     total_events = Event.objects.count()
-    total_participants = User.objects.filter(groups__name='Participant').count()  # count Users in Participant group
+    total_participants = User.objects.filter(groups__name='Participant').count()
     upcoming_events = Event.objects.filter(date__gt=today).count()
     past_events = Event.objects.filter(date__lt=today).count()
 
-    # Filter type from query params (default = today)
     filter_type = request.GET.get("type", "today")
 
     if filter_type == "all":
@@ -64,25 +76,20 @@ def dashboard_view(request):
         "filter_type": filter_type,
         "today": today,
     }
-    return render(request, "events/dashboard_view.html", context)
+    return render(request, "users/organizer_dashboard.html", context)
 
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def add_event(request):
     if request.method == 'POST':
         form = EventForm(request.POST)
-
-        # If you want to add participants here, now participants are Users
-        # You can add logic for RSVP later
-
         if form.is_valid():
             event = form.save(commit=False)
-            event.creator = request.user  # Assign creator as current user
+            event.creator = request.user
             event.save()
 
-            # Handle ManyToMany participants if needed
-            participant_ids = request.POST.getlist('participants')  # Expect participant user IDs
+            participant_ids = request.POST.getlist('participants')
             if participant_ids:
                 users = User.objects.filter(id__in=participant_ids)
                 event.participants.set(users)
@@ -94,11 +101,15 @@ def add_event(request):
     return render(request, 'events/add_event.html', {'form': form})
 
 
+@login_required
+@user_passes_test(is_participant)
 def all_events(request):
     events = Event.objects.select_related('category').prefetch_related('participants').order_by('-date', '-time')
     return render(request, 'events/all_events.html', {'events': events})
 
 
+@login_required
+@user_passes_test(is_participant)
 def search_events(request):
     query = request.GET.get('q', '')
     events = Event.objects.all()
@@ -113,7 +124,7 @@ def search_events(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def edit_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
@@ -129,7 +140,7 @@ def edit_event(request, event_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def delete_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
@@ -140,17 +151,15 @@ def delete_event(request, event_id):
     return render(request, 'events/delete_event_confirm.html', {'event': event})
 
 
-# Participant related views removed since Participant model is removed
-# You should now manage participants as User model instances with group "Participant"
-
-
+@login_required
+@user_passes_test(is_participant)
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'categories/category_list.html', {'categories': categories})
 
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def add_category(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -163,7 +172,7 @@ def add_category(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
@@ -177,10 +186,43 @@ def edit_category(request, category_id):
 
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def delete_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
         category.delete()
         return redirect('category_list')
     return render(request, 'categories/delete_category_confirm.html', {'category': category})
+
+# RSVP
+@login_required
+@user_passes_test(is_participant)
+def rsvp_event(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    user = request.user
+    
+    if user in event.participants.all():
+        messages.info(request, "You have already RSVP'd to this event.")
+    else:
+        event.participants.add(user)
+        messages.success(request, "RSVP successful!")
+
+        # Send confirmation email
+        send_mail(
+            subject=f"RSVP Confirmation for {event.name}",
+            message=(
+                f"Hi {user.first_name or user.username},\n\n"
+                f"You have successfully RSVP'd to the event '{event.name}' scheduled on {event.date} at {event.time}.\n\n"
+                "Thank you for your participation!"
+            ),
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+    return redirect('event_detail', event_id=event.id)
+
+
+def event_detail(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    return render(request, 'events/event_detail.html', {'event': event})
