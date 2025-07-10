@@ -1,5 +1,39 @@
 {% extends "base.html" %}
+{% block title %}Organizer Dashboard{% endblock %}
+
 {% block content %}
-<h1 class="text-2xl font-bold">Organizer Dashboard</h1>
-<p>Manage your events and categories here.</p>
+  <h1 class="text-2xl font-bold mb-4">Organizer Dashboard</h1>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-gray-500 text-sm">Your Total Events</h2>
+      <p class="text-2xl font-bold">{{ total_events }}</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-gray-500 text-sm">Upcoming Events</h2>
+      <p class="text-2xl font-bold">{{ upcoming_events }}</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-gray-500 text-sm">Past Events</h2>
+      <p class="text-2xl font-bold">{{ past_events }}</p>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <h2 class="text-gray-500 text-sm">Participants</h2>
+      <p class="text-2xl font-bold">{{ total_participants }}</p>
+    </div>
+  </div>
+
+  <h2 class="text-xl font-semibold mb-2">Your Events</h2>
+
+  <div class="space-y-4">
+    {% for event in events %}
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="text-lg font-bold">{{ event.title }}</h3>
+        <p class="text-gray-600">{{ event.date }} at {{ event.time }}</p>
+        <p class="text-gray-500 text-sm">{{ event.description|truncatewords:20 }}</p>
+      </div>
+    {% empty %}
+      <p>No events created yet.</p>
+    {% endfor %}
+  </div>
 {% endblock %}

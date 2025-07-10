@@ -101,15 +101,26 @@
             >Search</a
           >
         </div>
+        {% comment %} User {% endcomment %}
         <div>
           {% if user.is_authenticated %}
-              <a href="{% url 'logout' %}" class="text-red-600 hover:text-red-800">Sign Out</a>
-              <span class="text-gray-600">Hi, {{ user.first_name|default:user.username }}</span>
+                <form method="POST" action="{% url 'logout' %}" class="inline">
+                {% csrf_token %}
+                  <button type="submit" class="text-red-600 hover:text-red-800">Sign Out</button>
+                </form>
+                <span class="text-gray-600 ml-2">Hi, {{ user.first_name|default:user.username }}</span>
           {% else %}
-              <a href="{% url 'signup' %}" class="text-gray-600 hover:text-blue-500">Sign Up</a>
-              <a href="{% url 'login' %}" class="text-gray-600 hover:text-blue-500">Sign In</a>
+                <div class="flex items-center gap-3">
+                  <a href="{% url 'signup' %}" class="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition">
+                    Sign Up
+                  </a>
+                  <a href="{% url 'login' %}" class="px-4 py-1.5 text-sm font-medium text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition">
+                    Sign In
+                  </a>
+                </div>
           {% endif %}
         </div>
+
       </div>
     </nav>
 

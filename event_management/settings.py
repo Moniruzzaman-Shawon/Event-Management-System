@@ -15,7 +15,6 @@ import socket
 import dj_database_url
 import os
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -99,13 +98,14 @@ WSGI_APPLICATION = 'event_management.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        # Replace this value with your local database's connection string.
         default='postgresql://event_management_db_cchc_user:66fXEQWhHiZynHak31HVVBFBYNc8btUc@dpg-d1hunore5dus739h1tlg-a.oregon-postgres.render.com/event_management_db_cchc',
-        conn_max_age=600
+        conn_max_age=600,
+        ssl_require=True  
     )
 }
 
-# for postgresql
+
+# # # for postgresql
 
 # DATABASES = {
 #     'default': {
@@ -140,6 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/login/' 
 
 
 # Internationalization

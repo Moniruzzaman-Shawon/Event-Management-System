@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from .models import Event, Participant, Category
-from .forms import EventForm, ParticipantForm, CategoryForm
+from .models import Event, Category
+from .forms import EventForm, CategoryForm
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.core.exceptions import PermissionDenied
+from django.contrib.auth.models import User  # Import User model
 
 
 def home(request):
@@ -24,16 +27,21 @@ def show_event(request):
     return render(request, "show_event.html")
 
 
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def dashboard_view(request):
+    if not request.user.groups.filter(name="Organizer").exists():
+        raise PermissionDenied  # Or redirect
+
     today = timezone.localdate()
 
     # Calculate stats
     total_events = Event.objects.count()
-    total_participants = Participant.objects.count()
+    total_participants = User.objects.filter(groups__name='Participant').count()  # count Users in Participant group
     upcoming_events = Event.objects.filter(date__gt=today).count()
     past_events = Event.objects.filter(date__lt=today).count()
 
-    # filter type from query params (default = today)
+    # Filter type from query params (default = today)
     filter_type = request.GET.get("type", "today")
 
     if filter_type == "all":
@@ -45,7 +53,6 @@ def dashboard_view(request):
     else:
         events = Event.objects.filter(date=today)
 
-    # Prefetch participants to optimize DB queries
     events = events.prefetch_related('participants').order_by('date', 'time')
 
     context = {
@@ -60,25 +67,25 @@ def dashboard_view(request):
     return render(request, "events/dashboard_view.html", context)
 
 
-# Add a new event
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def add_event(request):
     if request.method == 'POST':
         form = EventForm(request.POST)
 
-        # Get new participant info from form
-        new_participant_name = request.POST.get('new_participant_name')
-        new_participant_email = request.POST.get('new_participant_email')
+        # If you want to add participants here, now participants are Users
+        # You can add logic for RSVP later
 
         if form.is_valid():
-            event = form.save()
+            event = form.save(commit=False)
+            event.creator = request.user  # Assign creator as current user
+            event.save()
 
-            # Create and add new participant if both fields provided
-            if new_participant_name and new_participant_email:
-                participant, created = Participant.objects.get_or_create(
-                    email=new_participant_email,
-                    defaults={'name': new_participant_name}
-                )
-                event.participants.add(participant)
+            # Handle ManyToMany participants if needed
+            participant_ids = request.POST.getlist('participants')  # Expect participant user IDs
+            if participant_ids:
+                users = User.objects.filter(id__in=participant_ids)
+                event.participants.set(users)
 
             return redirect('dashboard')
     else:
@@ -87,13 +94,11 @@ def add_event(request):
     return render(request, 'events/add_event.html', {'form': form})
 
 
-# Show all events
 def all_events(request):
     events = Event.objects.select_related('category').prefetch_related('participants').order_by('-date', '-time')
     return render(request, 'events/all_events.html', {'events': events})
 
 
-# Search event
 def search_events(request):
     query = request.GET.get('q', '')
     events = Event.objects.all()
@@ -107,7 +112,8 @@ def search_events(request):
     })
 
 
-# Update event
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def edit_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
@@ -122,6 +128,8 @@ def edit_event(request, event_id):
     return render(request, 'events/edit_event.html', {'form': form, 'event': event})
 
 
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def delete_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
@@ -132,55 +140,17 @@ def delete_event(request, event_id):
     return render(request, 'events/delete_event_confirm.html', {'event': event})
 
 
-# List participants
-def participant_list(request):
-    participants = Participant.objects.all()
-    return render(request, "participants/participant_list.html", {"participants": participants})
+# Participant related views removed since Participant model is removed
+# You should now manage participants as User model instances with group "Participant"
 
 
-# Add participant
-def add_participant(request):
-    if request.method == "POST":
-        form = ParticipantForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('participant_list')
-    else:
-        form = ParticipantForm()
-    return render(request, "participants/add_participant.html", {"form": form})
-
-
-# Edit participant
-def edit_participant(request, participant_id):
-    participant = get_object_or_404(Participant, id=participant_id)
-    if request.method == "POST":
-        form = ParticipantForm(request.POST, instance=participant)
-        if form.is_valid():
-            form.save()
-            return redirect('participant_list')
-    else:
-        form = ParticipantForm(instance=participant)
-    return render(request, "participants/edit_participant.html", {"form": form})
-
-
-# Delete participant
-def delete_participant(request, participant_id):
-    participant = get_object_or_404(Participant, id=participant_id)
-
-    if request.method == 'POST':
-        participant.delete()
-        return redirect('participant_list')
-
-    return render(request, 'participants/delete_participant_confirm.html', {'participant': participant})
-
-
-# List all categories
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'categories/category_list.html', {'categories': categories})
 
 
-# Add category
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def add_category(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -192,7 +162,8 @@ def add_category(request):
     return render(request, 'categories/add_category.html', {'form': form})
 
 
-# Edit category
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
@@ -205,7 +176,8 @@ def edit_category(request, category_id):
     return render(request, 'categories/edit_category.html', {'form': form, 'category': category})
 
 
-# Delete category
+@login_required
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def delete_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':

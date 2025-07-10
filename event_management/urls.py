@@ -23,7 +23,7 @@ from events.views import contact, aboutUs, events
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home),
+    path('', home, name='home'),
     path('contact/', contact),  
     path('events/', events),
     path('aboutus/', aboutUs),  
