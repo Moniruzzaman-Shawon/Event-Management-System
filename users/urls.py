@@ -1,6 +1,10 @@
 from django.urls import path
-from .views import signup_view, CustomLoginView, CustomLogoutView, admin_dashboard, participant_dashboard, organizer_dashboard, participant_list, edit_participant, delete_participant
-
+from .views import (signup_view, CustomLoginView, CustomLogoutView, admin_dashboard, 
+                    participant_dashboard, organizer_dashboard, participant_list,
+                     edit_participant, delete_participant, organizer_list, add_organizer,
+                     edit_organizer, delete_organizer , group_list, organizer_detail, add_group,
+                     edit_group, delete_group
+)
 urlpatterns = [
     path("sign-up/", signup_view, name="signup"),
     path("sign-in/", CustomLoginView.as_view(), name="login"),
@@ -12,4 +16,16 @@ urlpatterns = [
     path("participants/", participant_list, name="participant_list"),
     path("participants/edit/<int:user_id>/", edit_participant, name="edit_participant"),
     path("participants/delete/<int:user_id>/", delete_participant, name="delete_participant"),
+
+    path('organizers/', organizer_list, name='organizer_list'),
+    path('organizers/add/', add_organizer, name='add_organizer'),
+    path('organizers/edit/<int:user_id>/', edit_organizer, name='edit_organizer'),
+    path('organizers/delete/<int:user_id>/', delete_organizer, name='delete_organizer'),
+    path('organizers/<int:user_id>/', organizer_detail, name='organizer_detail'),
+
+    path('groups/', group_list, name='group_list'),
+    path('groups/add/', add_group, name='add_group'),
+    path('groups/edit/<int:group_id>/', edit_group, name='edit_group'),
+    path('groups/delete/<int:group_id>/', delete_group, name='delete_group'),
+
 ]

@@ -78,10 +78,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'events.context_processors.role_context_processor',
+                # custom app
             ],
         },
     },
 ]
+
 
 
 WSGI_APPLICATION = 'event_management.wsgi.application'

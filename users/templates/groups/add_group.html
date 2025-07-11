@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Add Group{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 p-8 bg-white shadow rounded border border-gray-300">
+  <h1 class="text-xl font-bold text-blue-700 mb-6">Add Group</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-4">
+      {{ form.name.label_tag }}
+      {{ form.name }}
+      {% if form.name.errors %}
+        <p class="text-sm text-red-500">{{ form.name.errors }}</p>
+      {% endif %}
+    </div>
+
+    <div class="flex justify-between">
+      <a href="{% url 'group_list' %}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</a>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
