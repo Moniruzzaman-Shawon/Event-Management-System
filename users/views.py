@@ -1,19 +1,23 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import Group, User
 from django.utils import timezone
 from django import forms
-
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.contrib.auth.forms import UserChangeForm
 from events.models import Event
+from django.conf import settings  
 
 
-
-# Group check utility
+# Group check utilities
 def is_admin(user):
     return user.is_superuser or user.groups.filter(name="Admin").exists()
 
@@ -22,7 +26,6 @@ def is_organizer(user):
 
 def is_participant(user):
     return is_admin(user) or user.groups.filter(name="Participant").exists()
-
 
 def get_user_role(user):
     if user.groups.filter(name="Admin").exists():
@@ -34,33 +37,65 @@ def get_user_role(user):
     return None
 
 
+# Signup with email activation
 def signup_view(request):
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            participant_group, _ = Group.objects.get_or_create(name="Participant")
-            user.groups.add(participant_group)
-            login(request, user)
-            role = get_user_role(user)
-            if role == "admin":
-                return redirect("admin_dashboard")
-            elif role == "organizer":
-                return redirect("organizer_dashboard")
-            elif role == "participant":
-                return redirect("participant_dashboard")
-            return redirect("home")
+            user = form.save(commit=False)
+            user.is_active = False  # deactivate until email confirmation
+            user.save()
+
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+            activation_link = request.build_absolute_uri(
+                reverse('activate_account', kwargs={'uidb64': uid, 'token': token})
+            )
+
+            subject = "Activate your account"
+            message = render_to_string('users/activation_email.html', {
+                'user': user,
+                'activation_link': activation_link,
+            })
+
+            user_email = form.cleaned_data.get('email')
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email], fail_silently=False)
+
+
+            return render(request, "users/activation_sent.html")
     else:
         form = CustomUserCreationForm()
     return render(request, "users/signup.html", {"form": form})
 
 
+# Activation view
+def activate_account(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)
+        return redirect('dashboard')  # redirect to dashboard or homepage
+    else:
+        return render(request, 'users/activation_invalid.html')
+
+
+# Custom Login and Logout Views
 class CustomLoginView(LoginView):
     authentication_form = CustomAuthenticationForm
     template_name = "users/login.html"
 
     def form_valid(self, form):
         user = form.get_user()
+        if not user.is_active:
+            # Prevent inactive user login
+            return render(self.request, 'users/activation_required.html')
         login(self.request, user)
         role = get_user_role(user)
         if role == "admin":
@@ -76,15 +111,13 @@ class CustomLogoutView(LogoutView):
     next_page = reverse_lazy("login")
 
 
-
-# organizer_list
+# Organizer management - Admin only
 @login_required
 @user_passes_test(is_admin)
 def organizer_list(request):
     organizers = User.objects.filter(groups__name="Organizer")
     return render(request, "organizer/organizer_list.html", {"organizers": organizers})
 
-# Add Organizer
 @login_required
 @user_passes_test(is_admin)
 def add_organizer(request):
@@ -99,8 +132,6 @@ def add_organizer(request):
         form = CustomUserCreationForm()
     return render(request, "organizer/add_organizer.html", {"form": form})
 
-
-# Edit Organizer
 @login_required
 @user_passes_test(is_admin)
 def edit_organizer(request, user_id):
@@ -114,8 +145,6 @@ def edit_organizer(request, user_id):
         form = UserChangeForm(instance=user)
     return render(request, "organizer/edit_organizer.html", {"form": form, "user": user})
 
-
-# Delete Organizer
 @login_required
 @user_passes_test(is_admin)
 def delete_organizer(request, user_id):
@@ -125,8 +154,6 @@ def delete_organizer(request, user_id):
         return redirect("organizer_list")
     return render(request, "organizer/delete_organizer_confirm.html", {"user": user})
 
-
-# Organizer detail view 
 @login_required
 @user_passes_test(is_admin)
 def organizer_detail(request, user_id):
@@ -134,22 +161,18 @@ def organizer_detail(request, user_id):
     return render(request, "organizer/organizer_detail.html", {"user": user})
 
 
- # Group form for update (name only)
+# Group management - Admin only
 class GroupForm(forms.ModelForm):
     class Meta:
         model = Group
         fields = ['name']
 
-
-# List all groups
 @login_required
 @user_passes_test(is_admin)
 def group_list(request):
     groups = Group.objects.all()
     return render(request, "groups/group_list.html", {"groups": groups})
 
-
-# Add new group
 @login_required
 @user_passes_test(is_admin)
 def add_group(request):
@@ -162,8 +185,6 @@ def add_group(request):
         form = GroupForm()
     return render(request, "groups/add_group.html", {"form": form})
 
-
-# Edit group
 @login_required
 @user_passes_test(is_admin)
 def edit_group(request, group_id):
@@ -177,8 +198,6 @@ def edit_group(request, group_id):
         form = GroupForm(instance=group)
     return render(request, "groups/edit_group.html", {"form": form, "group": group})
 
-
-# Delete group
 @login_required
 @user_passes_test(is_admin)
 def delete_group(request, group_id):
@@ -189,9 +208,7 @@ def delete_group(request, group_id):
     return render(request, "groups/delete_group_confirm.html", {"group": group})
 
 
-
-
-# Add Participant
+# Participant management - Admin and Organizer
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
 def add_participant(request):
@@ -199,14 +216,12 @@ def add_participant(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            group, _ = Group.objects.get_or_create(name="Participant")
-            user.groups.add(group)
+            participant_group, _ = Group.objects.get_or_create(name="Participant")
+            user.groups.add(participant_group)
             return redirect("participant_list")
     else:
         form = CustomUserCreationForm()
     return render(request, "participants/add_participant.html", {"form": form})
-
-# edit_participant
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
@@ -221,8 +236,6 @@ def edit_participant(request, user_id):
         form = UserChangeForm(instance=user)
     return render(request, "participants/edit_participant.html", {"form": form, "user": user})
 
-
-# delete_participant
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
 def delete_participant(request, user_id):
@@ -232,14 +245,12 @@ def delete_participant(request, user_id):
         return redirect("participant_list")
     return render(request, "participants/delete_participant_confirm.html", {"user": user})
 
-# View Participant Details
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
 def participant_detail(request, user_id):
     user = get_object_or_404(User, id=user_id, groups__name="Participant")
     return render(request, "participants/participant_detail.html", {"user": user})
 
-#participant_list
 @login_required
 @user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
 def participant_list(request):
@@ -247,20 +258,19 @@ def participant_list(request):
     return render(request, "participants/participant_list.html", {"participants": participants})
 
 
-
-# ---------------dashboard----------------
+# Dashboards
 
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
+    # You can add stats here if you want
     return render(request, "users/admin_dashboard.html")
 
 
-
-
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
+@user_passes_test(is_organizer)
 def organizer_dashboard(request):
+    # Filter events created by the organizer
     events = Event.objects.filter(creator=request.user)
 
     total_participants = User.objects.filter(groups__name="Participant").count()
@@ -274,7 +284,6 @@ def organizer_dashboard(request):
         "upcoming_events": upcoming_events,
         "past_events": past_events,
     }
-
     return render(request, "users/organizer_dashboard.html", context)
 
 
@@ -283,9 +292,4 @@ def organizer_dashboard(request):
 def participant_dashboard(request):
     user = request.user
     rsvped_events = Event.objects.filter(participants=user).order_by('date', 'time')
-
-    context = {
-        'rsvped_events': rsvped_events,
-    }
-    return render(request, "users/participant_dashboard.html", context)
-
+    return render(request, "users/participant_dashboard.html", {'rsvped_events': rsvped_events})
