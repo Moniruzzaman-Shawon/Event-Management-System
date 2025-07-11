@@ -46,6 +46,9 @@ def signup_view(request):
             user.is_active = False  # deactivate until email confirmation
             user.save()
 
+            participant_group, created = Group.objects.get_or_create(name='Participant')
+            user.groups.add(participant_group)
+
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
 
@@ -81,7 +84,7 @@ def activate_account(request, uidb64, token):
         user.is_active = True
         user.save()
         login(request, user)
-        return redirect('dashboard')  # redirect to dashboard or homepage
+        return redirect('home')  # redirect to dashboard or homepage
     else:
         return render(request, 'users/activation_invalid.html')
 
