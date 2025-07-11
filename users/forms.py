@@ -41,7 +41,7 @@ class CustomUserCreationForm(UserCreationForm):
             'placeholder': 'Enter your password',
             'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
         }),
-        help_text="",  # removes default help text
+        help_text="",  
     )
     password2 = forms.CharField(
         label="Confirm Password",
@@ -49,7 +49,7 @@ class CustomUserCreationForm(UserCreationForm):
             'placeholder': 'Confirm your password',
             'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
         }),
-        help_text="",  # removes default help text
+        help_text="",  
     )
 
     class Meta:

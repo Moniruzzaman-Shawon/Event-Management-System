@@ -1,4 +1,5 @@
 from django.urls import path
+from users import views
 from .views import (signup_view, CustomLoginView, CustomLogoutView, admin_dashboard, 
                     participant_dashboard, organizer_dashboard, 
                      edit_participant, delete_participant, organizer_list, add_organizer,
@@ -27,6 +28,8 @@ urlpatterns = [
     path('organizers/edit/<int:user_id>/', edit_organizer, name='edit_organizer'),
     path('organizers/delete/<int:user_id>/', delete_organizer, name='delete_organizer'),
     path('organizers/<int:user_id>/', organizer_detail, name='organizer_detail'),
+    path('promote-participant/', views.promote_from_participants, name='promote_from_participants'),
+
 
     # Groups
 

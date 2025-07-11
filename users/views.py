@@ -1,21 +1,21 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login
-from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import reverse, reverse_lazy
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import Group, User
-from django.utils import timezone
 from django import forms
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.template.loader import render_to_string
-from django.core.mail import send_mail
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from django.conf import settings
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import UserChangeForm
-from events.models import Event
-from django.conf import settings  
+from django.contrib.auth.models import Group, User
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.views import LoginView, LogoutView
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
+from events.models import Event
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
 # Group check utilities
 def is_admin(user):
@@ -113,6 +113,25 @@ class CustomLoginView(LoginView):
 class CustomLogoutView(LogoutView):
     next_page = reverse_lazy("login")
 
+
+@login_required
+@user_passes_test(is_admin)
+def promote_from_participants(request):
+    # Get all users in the "Participant" group
+    participant_group = Group.objects.get(name="Participant")
+    participants = User.objects.filter(groups=participant_group)
+
+    if request.method == "POST":
+        user_id = request.POST.get("user_id")
+        user = get_object_or_404(User, id=user_id)
+        organizer_group = Group.objects.get(name="Organizer")
+        user.groups.add(organizer_group)
+        user.save()
+        return redirect('promote_from_participants')
+
+    return render(request, "users/promote_from_participants.html", {
+        "participants": participants
+    })
 
 # Organizer management - Admin only
 @login_required
@@ -268,7 +287,7 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    events = Event.objects.all()  # Admin sees all events
+    events = Event.objects.all()  # Admin can see all events
 
     total_participants = User.objects.filter(groups__name="Participant").count()
     total_events = events.count()
