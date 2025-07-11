@@ -76,12 +76,6 @@ class CustomLogoutView(LogoutView):
     next_page = reverse_lazy("login")
 
 
-# participant_list
-@login_required
-@user_passes_test(lambda u: u.groups.filter(name__in=["Admin", "Organizer"]).exists())
-def participant_list(request):
-    participants = User.objects.filter(groups__name="Participant")
-    return render(request, "users/participant_list.html", {"participants": participants})
 
 # organizer_list
 @login_required
@@ -195,10 +189,27 @@ def delete_group(request, group_id):
     return render(request, "groups/delete_group_confirm.html", {"group": group})
 
 
+
+
+# Add Participant
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+def add_participant(request):
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            group, _ = Group.objects.get_or_create(name="Participant")
+            user.groups.add(group)
+            return redirect("participant_list")
+    else:
+        form = CustomUserCreationForm()
+    return render(request, "participants/add_participant.html", {"form": form})
+
 # edit_participant
 
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
 def edit_participant(request, user_id):
     user = get_object_or_404(User, id=user_id, groups__name="Participant")
     if request.method == "POST":
@@ -208,18 +219,32 @@ def edit_participant(request, user_id):
             return redirect("participant_list")
     else:
         form = UserChangeForm(instance=user)
-    return render(request, "users/edit_participant.html", {"form": form, "user": user})
+    return render(request, "participants/edit_participant.html", {"form": form, "user": user})
 
 
 # delete_participant
 @login_required
-@user_passes_test(lambda u: u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
 def delete_participant(request, user_id):
     user = get_object_or_404(User, id=user_id, groups__name="Participant")
     if request.method == "POST":
         user.delete()
         return redirect("participant_list")
-    return render(request, "users/delete_participant_confirm.html", {"user": user})
+    return render(request, "participants/delete_participant_confirm.html", {"user": user})
+
+# View Participant Details
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+def participant_detail(request, user_id):
+    user = get_object_or_404(User, id=user_id, groups__name="Participant")
+    return render(request, "participants/participant_detail.html", {"user": user})
+
+#participant_list
+@login_required
+@user_passes_test(lambda u: u.is_superuser or u.groups.filter(name__in=["Admin", "Organizer"]).exists())
+def participant_list(request):
+    participants = User.objects.filter(groups__name="Participant")
+    return render(request, "participants/participant_list.html", {"participants": participants})
 
 
 
@@ -231,24 +256,25 @@ def admin_dashboard(request):
     return render(request, "users/admin_dashboard.html")
 
 
+
+
 @login_required
-@user_passes_test(is_organizer)
+@user_passes_test(lambda u: u.groups.filter(name="Organizer").exists())
 def organizer_dashboard(request):
-    today = timezone.localdate()
-    events = Event.objects.filter(creator=request.user).prefetch_related('participants').order_by('date', 'time')
+    events = Event.objects.filter(creator=request.user)
+
+    total_participants = User.objects.filter(groups__name="Participant").count()
     total_events = events.count()
-    upcoming_events = events.filter(date__gt=today).count()
-    past_events = events.filter(date__lt=today).count()
-    total_participants = sum(event.participants.count() for event in events)
+    upcoming_events = events.filter(date__gte=timezone.now().date()).count()
+    past_events = events.filter(date__lt=timezone.now().date()).count()
 
     context = {
+        "total_participants": total_participants,
         "total_events": total_events,
         "upcoming_events": upcoming_events,
         "past_events": past_events,
-        "total_participants": total_participants,
-        "events": events,
-        "today": today,
     }
+
     return render(request, "users/organizer_dashboard.html", context)
 
 

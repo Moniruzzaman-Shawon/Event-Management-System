@@ -143,7 +143,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/login/' 
+LOGIN_URL = '/sign-in/'
 
 
 EMAIL_HOST = 'smtp.gmail.com'
