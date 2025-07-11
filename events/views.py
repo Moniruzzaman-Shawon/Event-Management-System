@@ -83,7 +83,7 @@ def dashboard_view(request):
 @user_passes_test(is_organizer)
 def add_event(request):
     if request.method == 'POST':
-        form = EventForm(request.POST)
+        form = EventForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
             event.creator = request.user
@@ -129,7 +129,7 @@ def edit_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
 
     if request.method == "POST":
-        form = EventForm(request.POST, instance=event)
+        form = EventForm(request.POST, request.FILES, instance=event)
         if form.is_valid():
             form.save()
             return redirect('dashboard')
@@ -225,4 +225,6 @@ def rsvp_event(request, event_id):
 
 def event_detail(request, event_id):
     event = get_object_or_404(Event, id=event_id)
+    
+
     return render(request, 'events/event_detail.html', {'event': event})

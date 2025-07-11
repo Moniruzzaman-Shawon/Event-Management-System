@@ -146,6 +146,10 @@ LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = '/sign-in/'
 
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587

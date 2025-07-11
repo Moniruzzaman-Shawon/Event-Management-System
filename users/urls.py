@@ -4,7 +4,7 @@ from .views import (signup_view, CustomLoginView, CustomLogoutView, admin_dashbo
                      edit_participant, delete_participant, organizer_list, add_organizer,
                      edit_organizer, delete_organizer , group_list, organizer_detail, add_group,
                      edit_group, delete_group, add_participant, participant_detail, participant_list,
-                     activate_account,
+                     activate_account
 )
 urlpatterns = [
         
@@ -14,7 +14,7 @@ urlpatterns = [
     path("sign-in/", CustomLoginView.as_view(), name="login"),
     path("users/logout/", CustomLogoutView.as_view(), name="logout"),
     path('activate/<uidb64>/<token>/', activate_account, name='activate_account'),
-    # Dashboards
+    
 
     path("dashboard/admin/", admin_dashboard, name="admin_dashboard"),
     path("dashboard/organizer/", organizer_dashboard, name="organizer_dashboard"),

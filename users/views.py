@@ -262,12 +262,26 @@ def participant_list(request):
 
 
 # Dashboards
+def is_admin(user):
+    return user.is_staff
 
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    # You can add stats here if you want
-    return render(request, "users/admin_dashboard.html")
+    events = Event.objects.all()  # Admin sees all events
+
+    total_participants = User.objects.filter(groups__name="Participant").count()
+    total_events = events.count()
+    upcoming_events = events.filter(date__gte=timezone.now().date()).count()
+    past_events = events.filter(date__lt=timezone.now().date()).count()
+
+    context = {
+        "total_participants": total_participants,
+        "total_events": total_events,
+        "upcoming_events": upcoming_events,
+        "past_events": past_events,
+    }
+    return render(request, "users/admin_dashboard.html", context)
 
 
 @login_required

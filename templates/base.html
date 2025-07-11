@@ -42,20 +42,18 @@
               {% with group=user.groups.first %}
                 {% if group.name == "Organizer" %}
                   <a href="{% url 'organizer_dashboard' %}" class="text-gray-600 hover:text-blue-500">Dashboard</a>
-                
-                  {% if user.is_superuser %}
-                    <a href="{% url 'admin_dashboard' %}" class="text-gray-600 hover:text-blue-500">Dashboard</a>
-                  {% endif %}
-                  
-                {% endif %}
-                {% if group.name == "Participant" %}
-                <a href="{% url 'participant_dashboard' %}" class="text-gray-600 hover:text-blue-500">Dashboard</a>
+                {% elif group.name == "Participant" %}
+                  <a href="{% url 'participant_dashboard' %}" class="text-gray-600 hover:text-blue-500">Dashboard</a>
                 {% endif %}
               {% endwith %}
             {% elif user.is_superuser %}
+              <!-- Only show admin dashboard if user is not in any group -->
               <a href="{% url 'admin_dashboard' %}" class="text-gray-600 hover:text-blue-500">Dashboard</a>
             {% endif %}
           {% endif %}
+
+
+
 
 
 

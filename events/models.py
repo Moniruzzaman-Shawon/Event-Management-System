@@ -16,6 +16,12 @@ class Event(models.Model):
     time = models.TimeField()
     location = models.CharField(max_length=255)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+    image = models.ImageField(
+        upload_to='event_images/',
+        default='event_images/default.jpg',
+        blank=True
+    )
     
     # RSVP system
     participants = models.ManyToManyField(User, related_name="rsvped_events", blank=True)
