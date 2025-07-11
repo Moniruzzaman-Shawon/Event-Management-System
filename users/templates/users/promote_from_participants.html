@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Promote Participants{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-6 my-8">Promote Participant to Organizer</h1>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    {% for participant in participants %}
+      <div class="p-4 border rounded shadow">
+        <p class="font-semibold">{{ participant.get_full_name|default:participant.username }}</p>
+        <p class="text-sm text-gray-500">{{ participant.email }}</p>
+        <form method="POST" class="mt-2">
+          {% csrf_token %}
+          <input type="hidden" name="user_id" value="{{ participant.id }}">
+          <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm">
+            Promote to Organizer
+          </button>
+        </form>
+      </div>
+    {% empty %}
+      <p>No participants found.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

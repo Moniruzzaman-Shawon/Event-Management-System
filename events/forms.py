@@ -1,20 +1,20 @@
 from django import forms
-from .models import Event, Participant, Category
+from django.contrib.auth.models import User
+from .models import Event, Category
 
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
-        fields = ['name', 'description', 'date', 'time', 'location', 'category', 'participants']
+        fields = ['name', 'description', 'date', 'time', 'location', 'category', 'participants', 'image']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
             'time': forms.TimeInput(attrs={'type': 'time'}),
             'participants': forms.SelectMultiple(attrs={'size': 6}),
         }
 
-class ParticipantForm(forms.ModelForm):
-    class Meta:
-        model = Participant
-        fields = ['name', 'email']
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['participants'].queryset = User.objects.filter(groups__name='Participant')
 
 class CategoryForm(forms.ModelForm):
     class Meta:

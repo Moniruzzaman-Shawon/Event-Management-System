@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Organizer List{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Organizers</h1>
+
+<a href="{% url 'add_organizer' %}" class="bg-green-600 text-white px-4 py-2 rounded mb-4 inline-block hover:bg-green-700">Add Organizer</a>
+
+<table class="table-auto w-full border-collapse border border-gray-300">
+  <thead>
+    <tr class="bg-gray-100">
+      <th class="border px-4 py-2">Username</th>
+      <th class="border px-4 py-2">Email</th>
+      <th class="border px-4 py-2">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for organizer in organizers %}
+    <tr>
+      <td class="border px-4 py-2">{{ organizer.username }}</td>
+      <td class="border px-4 py-2">{{ organizer.email }}</td>
+      <td class="border px-4 py-2 space-x-2">
+        <a href="{% url 'edit_organizer' organizer.id %}" class="text-blue-600 hover:underline">Edit</a>
+        <a href="{% url 'delete_organizer' organizer.id %}" class="text-red-600 hover:underline">Delete</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="3" class="border px-4 py-2 text-center">No organizers found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

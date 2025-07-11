@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Delete Organizer{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6 text-center text-red-700">Confirm Delete</h1>
+
+<p class="text-center text-gray-800">Are you sure you want to delete organizer <strong>{{ user.username }}</strong>?</p>
+
+<form method="post" class="flex justify-center gap-4 mt-6">
+    {% csrf_token %}
+    <a href="{% url 'organizer_list' %}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">Cancel</a>
+    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Delete</button>
+</form>
+{% endblock %}

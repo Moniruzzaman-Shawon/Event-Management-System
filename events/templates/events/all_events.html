@@ -2,17 +2,33 @@
 {% block title %}All Events{% endblock %}
 
 {% block content %}
-  <h1 class="text-2xl font-bold mb-6">All Events</h1>
+  <h1 class="text-2xl font-bold mb-6 my-8">All Events</h1>
 
   <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for event in events %}
-      <div class="border rounded-lg p-4 shadow hover:shadow-lg transition">
-        <h2 class="text-xl font-semibold">{{ event.name }}</h2>
-        <p class="text-sm text-gray-600">{{ event.date }} at {{ event.time }}</p>
-        <p class="text-gray-700 mt-1">{{ event.description|default:"No description" }}</p>
-        <p class="text-sm mt-2 text-blue-600 font-medium">Category: {{ event.category.name }}</p>
-        <p class="text-sm text-gray-600">Location: {{ event.location }}</p>
-        <p class="text-sm text-green-600 mt-1">Participants: {{ event.participants.count }}</p>
+      <div class="border rounded-lg p-4 shadow hover:shadow-lg transition bg-white">
+        <a href="{% url 'event_detail' event.id %}" class="no-underline hover:no-underline text-inherit block">
+          {% if event.image %}
+            <img src="{{ event.image.url }}" alt="{{ event.name }}" class="w-full h-48 object-cover rounded mb-3">
+          {% else %}
+            <img src="{{ MEDIA_URL }}event_images/default.jpg" alt="Default Image" class="w-full h-48 object-cover rounded mb-3">
+          {% endif %}
+
+          <h2 class="text-xl font-semibold">{{ event.name }}</h2>
+          <p class="text-sm text-gray-600">{{ event.date }} at {{ event.time }}</p>
+          <p class="text-gray-700 mt-1">{{ event.description|default:"No description" }}</p>
+          <p class="text-sm mt-2 text-blue-600 font-medium">Category: {{ event.category.name }}</p>
+          <p class="text-sm text-gray-600">Location: {{ event.location }}</p>
+          <p class="text-sm text-green-600 mt-1">Participants: {{ event.participants.count }}</p>
+        </a>
+
+        <!-- Edit Button for organizers/admins only -->
+        {% if request.user.is_staff or request.user.profile.is_organizer %}
+          <a href="{% url 'edit_event' event.id %}" 
+             class="inline-block mt-3 px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm">
+             ✏️ Edit Event
+          </a>
+        {% endif %}
       </div>
     {% empty %}
       <p>No events found.</p>

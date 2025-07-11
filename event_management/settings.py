@@ -14,7 +14,8 @@ from pathlib import Path
 import socket
 import dj_database_url
 import os
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,10 +25,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x_op5k$73zyam%89jwajr=y@i^8h8lhtn=fd4g%acpmlx$(5=r'
+SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-key-if-not-set')
+
+
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS =['https://*.onrender.com', 'http://127.0.0.1:8000']
@@ -42,8 +46,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'events',
     'debug_toolbar',
+    'events',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -76,10 +81,13 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'events.context_processors.role_context_processor',
+                # custom app
             ],
         },
     },
 ]
+
 
 
 WSGI_APPLICATION = 'event_management.wsgi.application'
@@ -95,14 +103,16 @@ WSGI_APPLICATION = 'event_management.wsgi.application'
 #     }
 # }
 
-
 DATABASES = {
     'default': dj_database_url.config(
-        # Replace this value with your local database's connection string.
-        default='postgresql://event_management_db_cchc_user:66fXEQWhHiZynHak31HVVBFBYNc8btUc@dpg-d1hunore5dus739h1tlg-a.oregon-postgres.render.com/event_management_db_cchc',
-        conn_max_age=600
+        default=os.getenv('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True,
     )
 }
+
+
+# # # for postgresql
 
 # DATABASES = {
 #     'default': {
@@ -133,6 +143,26 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/sign-in/'
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() in ('true', '1', 'yes')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 
 
 # Internationalization
