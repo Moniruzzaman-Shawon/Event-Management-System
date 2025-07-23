@@ -1,3 +1,4 @@
+
 """
 WSGI config for event_management project.
 
