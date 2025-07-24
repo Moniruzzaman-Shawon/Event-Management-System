@@ -49,25 +49,30 @@ def show_event(request, event_id):
     return render(request, 'events/show_event.html', {'event': event})
 
 @login_required
-@user_passes_test(is_organizer)
 def dashboard_view(request):
     today = timezone.localdate()
 
-    total_events = Event.objects.count()
+    # For admins: show all events, for organizers: only their own
+    if request.user.is_superuser:
+        user_events = Event.objects.all()
+    else:
+        user_events = Event.objects.filter(creator=request.user)
+
+    total_events = user_events.count()
     total_participants = User.objects.filter(groups__name='Participant').count()
-    upcoming_events = Event.objects.filter(date__gt=today).count()
-    past_events = Event.objects.filter(date__lt=today).count()
+    upcoming_events = user_events.filter(date__gt=today).count()
+    past_events = user_events.filter(date__lt=today).count()
 
     filter_type = request.GET.get("type", "today")
 
     if filter_type == "all":
-        events = Event.objects.all()
+        events = user_events
     elif filter_type == "upcoming":
-        events = Event.objects.filter(date__gt=today)
+        events = user_events.filter(date__gt=today)
     elif filter_type == "past":
-        events = Event.objects.filter(date__lt=today)
+        events = user_events.filter(date__lt=today)
     else:
-        events = Event.objects.filter(date=today)
+        events = user_events.filter(date=today)
 
     events = events.prefetch_related('participants').order_by('date', 'time')
 
@@ -81,6 +86,7 @@ def dashboard_view(request):
         "today": today,
     }
     return render(request, "users/organizer_dashboard.html", context)
+
 
 def can_add_event(user):
     return user.is_superuser or user.groups.filter(name__in=["Organizer", "Admin"]).exists()

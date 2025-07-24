@@ -26,6 +26,6 @@ class Event(models.Model):
     # AUTH_USER_MODEL
     participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="rsvped_events", blank=True)
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_events')
-
+    
     def __str__(self):
         return self.name
