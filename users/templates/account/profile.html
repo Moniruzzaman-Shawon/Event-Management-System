@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-200 flex items-center justify-center px-4 py-10">
+  <div class="w-full max-w-[1182px] flex flex-col md:flex-row bg-white shadow-lg rounded-lg overflow-hidden">
+
+    <!-- Profile Picture -->
+    <div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-10 order-1 md:order-2">
+      {% if user.profile_picture %}
+        <img src="{{ user.profile_picture.url }}" alt="Profile picture"
+             class="rounded-full object-cover w-40 h-40 sm:w-52 sm:h-52 md:w-72 md:h-72 shadow-lg" />
+      {% else %}
+        <div
+          class="w-40 h-40 sm:w-52 sm:h-52 md:w-72 md:h-72 rounded-full bg-gray-300 flex items-center justify-center text-6xl sm:text-7xl md:text-8xl font-bold text-gray-600 select-none">
+          {{ user.first_name|default:user.username|slice:":1"|upper }}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Profile Details -->
+    <div class="w-full md:w-1/2 p-6 sm:p-10 flex flex-col justify-center">
+      <!-- Name and Username -->
+      <div class="mb-6 sm:mb-8 text-center md:text-left">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900">
+          {{ user.first_name|default:user.username }} {{ user.last_name }}
+        </h1>
+        <h3 class="text-gray-500 text-lg sm:text-xl md:text-2xl font-semibold mt-2">
+          @{{ user.username }}
+        </h3>
+      </div>
+
+      <!-- Info Fields -->
+      <div class="space-y-4 text-gray-800 text-base sm:text-lg">
+        <div class="flex flex-col max-[374px]:flex-col sm:flex-row">
+          <div class="w-full sm:w-40 font-semibold text-indigo-700 uppercase tracking-wide">Email</div>
+          <div class="flex-1">{{ user.email }}</div>
+        </div>
+
+        <div class="flex flex-col max-[374px]:flex-col sm:flex-row">
+          <div class="w-full sm:w-40 font-semibold text-indigo-700 uppercase tracking-wide">First Name</div>
+          <div class="flex-1">{{ user.first_name|default:"N/A" }}</div>
+        </div>
+
+        <div class="flex flex-col max-[374px]:flex-col sm:flex-row">
+          <div class="w-full sm:w-40 font-semibold text-indigo-700 uppercase tracking-wide">Last Name</div>
+          <div class="flex-1">{{ user.last_name|default:"N/A" }}</div>
+        </div>
+
+        <div class="flex flex-col max-[374px]:flex-col sm:flex-row">
+          <div class="w-full sm:w-40 font-semibold text-indigo-700 uppercase tracking-wide">Phone Number</div>
+          <div class="flex-1">{{ user.phone_number|default:"Not Provided" }}</div>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="mt-8 flex flex-col space-y-3">
+        <a href="{% url 'edit_profile' %}"
+           class="px-6 py-3 bg-indigo-700 text-white font-semibold rounded hover:bg-indigo-800 transition text-center">
+          Edit Profile
+        </a>
+        <a href="{% url 'password_change' %}"
+           class="px-6 py-3 border-2 border-indigo-700 text-indigo-700 font-semibold rounded hover:bg-indigo-100 transition text-center">
+          Change Password
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

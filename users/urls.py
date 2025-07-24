@@ -2,14 +2,17 @@ from django.urls import path
 from users import views
 from .views import (CustomLoginView, CustomLogoutView, admin_dashboard, 
                     participant_dashboard, organizer_dashboard, 
-                     edit_participant, delete_participant,  
-                     group_list, organizer_detail, add_group,
-                     edit_group, delete_group,  participant_detail, participant_list,
-                     activate_account
+                    edit_participant, delete_participant,  
+                    group_list, organizer_detail, add_group,
+                    edit_group, delete_group,  participant_detail, participant_list,
+                    activate_account,EditOrganizer, DeleteOrganizer, AddParticipant, SignupView, OrganizerListView, AddOrganizer,
+                    ProfileView, EditProfileView, CustomPasswordChangeView, CustomPasswordChangeDoneView,
+                    CustomPasswordResetView, CustomPasswordResetDoneView, CustomPasswordResetConfirmView, 
+                    CustomPasswordResetCompleteView,
 )
 from django.conf import settings
 from django.conf.urls.static import static
-from users.views import EditOrganizer, DeleteOrganizer, AddParticipant, SignupView, OrganizerListView, AddOrganizer
+
 
 urlpatterns = [
         
@@ -56,6 +59,20 @@ urlpatterns = [
     path('participants/edit/<int:user_id>/', edit_participant, name='edit_participant'),
     path('participants/delete/<int:user_id>/', delete_participant, name='delete_participant'),
     path('participants/<int:user_id>/', participant_detail, name='participant_detail'),
+
+
+    # profile
+    path('profile/', ProfileView.as_view(), name='profile'),
+    path('profile/edit/', EditProfileView.as_view(), name='edit_profile'),
+
+
+    # password related
+    path('password/change/', CustomPasswordChangeView.as_view(), name='password_change'),
+    path('password/change/done/', CustomPasswordChangeDoneView.as_view(), name='password_change_done'),
+    path('password/reset/', CustomPasswordResetView.as_view(), name='password_reset'),
+    path('password/reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('password/reset/confirm/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('password/reset/complete/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
 ]
 

@@ -20,7 +20,14 @@ from django.views import View
 from users.models import CustomUser
 from django.views.generic import DeleteView
 from django.views.generic import ListView
-
+from django.contrib.auth.views import (
+    PasswordChangeView,
+    PasswordChangeDoneView,
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView,
+)
 
 
 
@@ -362,3 +369,56 @@ def participant_dashboard(request):
     user = request.user
     rsvped_events = Event.objects.filter(participants=user).order_by('date', 'time')
     return render(request, "users/participant_dashboard.html", {'rsvped_events': rsvped_events})
+
+
+
+
+# Profile View
+class ProfileView(LoginRequiredMixin, View):
+    def get(self, request):
+        return render(request, "account/profile.html", {"user": request.user})
+
+
+# Edit Profile View
+class EditProfileView(LoginRequiredMixin, View):
+    def get(self, request):
+        form = CustomUserChangeForm(instance=request.user)
+        return render(request, "account/edit_profile.html", {"form": form})
+
+    def post(self, request):
+        form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("profile")
+        return render(request, "account/edit_profile.html", {"form": form})
+
+
+# Password change views
+class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
+    template_name = "account/change_password.html"
+    success_url = reverse_lazy("password_change_done")
+
+
+class CustomPasswordChangeDoneView(LoginRequiredMixin, PasswordChangeDoneView):
+    template_name = "account/change_password_done.html"
+
+
+# Password reset views (no login required)
+class CustomPasswordResetView(PasswordResetView):
+    template_name = "account/password_reset_form.html"
+    email_template_name = "account/password_reset_email.html"
+    subject_template_name = "account/password_reset_subject.txt"
+    success_url = reverse_lazy("password_reset_done")
+
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = "account/password_reset_done.html"
+
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = "account/password_reset_confirm.html"
+    success_url = reverse_lazy("password_reset_complete")
+
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = "account/password_reset_complete.html"

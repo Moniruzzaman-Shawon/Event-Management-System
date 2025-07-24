@@ -19,7 +19,7 @@ from events.views import (
 urlpatterns = [
     path('show_event/', show_event),
     path('dashboard/', dashboard_view, name='dashboard'),    
-    path('add_event/', add_event, name='add_event'),
+    path('events/add/', views.add_event, name='add_event'),
     path('all_events/', all_events, name='all_events'),
     path('search/', search_events, name='search_events'),
     path('edit_event/<int:event_id>/', edit_event, name='edit_event'),
