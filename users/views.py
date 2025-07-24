@@ -350,7 +350,7 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(is_organizer)
 def organizer_dashboard(request):
-    events = Event.objects.filter(creator=request.user)
+    events = Event.objects.all()
 
     total_participants = User.objects.filter(groups__name="Participant").count()
     total_events = events.count()

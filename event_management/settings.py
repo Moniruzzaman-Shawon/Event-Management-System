@@ -14,8 +14,8 @@ import dj_database_url
 from pathlib import Path
 import socket
 import os
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -118,12 +118,11 @@ WSGI_APPLICATION = 'event_management.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
+        default=os.getenv('DATABASE_URL'),  
         conn_max_age=600,
-        # Remove ssl_require for SQLite
+        ssl_require=True,
     )
 }
-
 
 # # # for postgresql
 

@@ -18,7 +18,7 @@ from events.views import (
 
 urlpatterns = [
     path('show_event/', show_event),
-    path('dashboard/', dashboard_view, name='dashboard'),    
+    path('dashboard/', dashboard_view, name='dashboard'),
     path('events/add/', views.add_event, name='add_event'),
     path('all_events/', all_events, name='all_events'),
     path('search/', search_events, name='search_events'),
@@ -31,6 +31,7 @@ urlpatterns = [
     path('events/<int:event_id>/rsvp/', views.rsvp_event, name='rsvp_event'),
     path('events/<int:event_id>/', views.event_detail, name='event_detail'),
     path('show_event/<int:event_id>/', views.show_event, name='show_event'),
+
 
 
     

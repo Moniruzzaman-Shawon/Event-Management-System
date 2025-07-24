@@ -48,15 +48,35 @@ def show_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     return render(request, 'events/show_event.html', {'event': event})
 
+
+@login_required
+def dashboard_redirect(request):
+    user = request.user
+    if user.is_superuser:
+        return redirect('admin_dashboard')
+    elif user.groups.filter(name='Organizer').exists():
+        return redirect('organizer_dashboard')
+    elif user.groups.filter(name='Participant').exists():
+        return redirect('participant_dashboard')
+    else:
+        return redirect('dashboard')
+
+
+
+
+
+
 @login_required
 def dashboard_view(request):
     today = timezone.localdate()
 
-    # For admins: show all events, for organizers: only their own
-    if request.user.is_superuser:
+    if request.user.groups.filter(name="Organizer").exists() or request.user.is_superuser:
+        # Show all events for both Admin and Organizer
         user_events = Event.objects.all()
     else:
+        # Show only relevant data to participants
         user_events = Event.objects.filter(creator=request.user)
+
 
     total_events = user_events.count()
     total_participants = User.objects.filter(groups__name='Participant').count()
@@ -86,6 +106,7 @@ def dashboard_view(request):
         "today": today,
     }
     return render(request, "users/organizer_dashboard.html", context)
+
 
 
 def can_add_event(user):

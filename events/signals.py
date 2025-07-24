@@ -1,13 +1,14 @@
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
 from .models import Event
+
+User = get_user_model()
 
 @receiver(m2m_changed, sender=Event.participants.through)
 def send_rsvp_email(sender, instance, action, pk_set, **kwargs):
     if action == 'post_add':
-        # pk_set contains IDs of users added to participants
-        from django.contrib.auth.models import User
         users = User.objects.filter(pk__in=pk_set)
         
         for user in users:
