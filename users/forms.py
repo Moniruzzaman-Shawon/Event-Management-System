@@ -1,7 +1,9 @@
 from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordResetForm
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+
+User = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -12,62 +14,39 @@ class CustomUserCreationForm(UserCreationForm):
             'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
         }),
     )
-    first_name = forms.CharField(
-        required=True,
-        label="First Name",
+    
+    phone_number = forms.CharField(
+        required=False,
+        label="Phone Number",
         widget=forms.TextInput(attrs={
-            'placeholder': 'Enter your first name',
+            'placeholder': 'Enter your phone number',
             'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
         }),
     )
-    last_name = forms.CharField(
-        required=True,
-        label="Last Name",
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Enter your last name',
-            'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
-        }),
-    )
-    username = forms.CharField(
-        label="Username",
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Enter your username',
-            'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
-        }),
-    )
-    password1 = forms.CharField(
-        label="Password",
-        widget=forms.PasswordInput(attrs={
-            'placeholder': 'Enter your password',
-            'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
-        }),
-        help_text="",  
-    )
-    password2 = forms.CharField(
-        label="Confirm Password",
-        widget=forms.PasswordInput(attrs={
-            'placeholder': 'Confirm your password',
-            'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all'
-        }),
-        help_text="",  
+
+    profile_picture = forms.ImageField(
+        required=False,
+        label="Profile Picture",
     )
 
     class Meta:
+        model = User  
+        fields = [
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "profile_picture",
+            "password1",
+            "password2",
+        ]
+
+class CustomUserChangeForm(UserChangeForm):
+    password = None
+    class Meta:
         model = User
-        fields = ["username", "email", "first_name", "last_name", "password1", "password2"]
-
-    def clean_email(self):
-        email = self.cleaned_data.get("email")
-        if User.objects.filter(email=email).exists():
-            raise ValidationError("An account with this email already exists.")
-        return email
-
-    def clean_username(self):
-        username = self.cleaned_data.get("username")
-        if User.objects.filter(username=username).exists():
-            raise ValidationError("This username is already taken.")
-        return username
-
+        fields = ('username', 'email', 'first_name', 'last_name', 'phone_number', 'profile_picture')
 
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
@@ -84,4 +63,11 @@ class CustomAuthenticationForm(AuthenticationForm):
             'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all',
         }),
         label="Password"
+    )
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    email = forms.EmailField(
+        label="Email Address",
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter your email'})
     )

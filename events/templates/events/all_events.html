@@ -2,7 +2,15 @@
 {% block title %}All Events{% endblock %}
 
 {% block content %}
-  <h1 class="text-2xl font-bold mb-6 my-8">All Events</h1>
+  <div class="flex justify-between items-center mb-6 my-8">
+    <h1 class="text-2xl font-bold">All Events</h1>
+    {% if can_add_event %}
+      <a href="{% url 'add_event' %}" 
+         class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+        + Add New Event
+      </a>
+    {% endif %}
+  </div>
 
   <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for event in events %}
@@ -22,8 +30,7 @@
           <p class="text-sm text-green-600 mt-1">Participants: {{ event.participants.count }}</p>
         </a>
 
-        <!-- Edit Button for organizers/admins only -->
-        {% if request.user.is_staff or request.user.profile.is_organizer %}
+        {% if can_add_event %}
           <a href="{% url 'edit_event' event.id %}" 
              class="inline-block mt-3 px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition text-sm">
              ✏️ Edit Event

@@ -9,6 +9,10 @@ from .forms import EventForm, CategoryForm
 from django.conf import settings
 from .models import Event
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
 
 
 
@@ -45,25 +49,30 @@ def show_event(request, event_id):
     return render(request, 'events/show_event.html', {'event': event})
 
 @login_required
-@user_passes_test(is_organizer)
 def dashboard_view(request):
     today = timezone.localdate()
 
-    total_events = Event.objects.count()
+    # For admins: show all events, for organizers: only their own
+    if request.user.is_superuser:
+        user_events = Event.objects.all()
+    else:
+        user_events = Event.objects.filter(creator=request.user)
+
+    total_events = user_events.count()
     total_participants = User.objects.filter(groups__name='Participant').count()
-    upcoming_events = Event.objects.filter(date__gt=today).count()
-    past_events = Event.objects.filter(date__lt=today).count()
+    upcoming_events = user_events.filter(date__gt=today).count()
+    past_events = user_events.filter(date__lt=today).count()
 
     filter_type = request.GET.get("type", "today")
 
     if filter_type == "all":
-        events = Event.objects.all()
+        events = user_events
     elif filter_type == "upcoming":
-        events = Event.objects.filter(date__gt=today)
+        events = user_events.filter(date__gt=today)
     elif filter_type == "past":
-        events = Event.objects.filter(date__lt=today)
+        events = user_events.filter(date__lt=today)
     else:
-        events = Event.objects.filter(date=today)
+        events = user_events.filter(date=today)
 
     events = events.prefetch_related('participants').order_by('date', 'time')
 
@@ -79,8 +88,12 @@ def dashboard_view(request):
     return render(request, "users/organizer_dashboard.html", context)
 
 
+def can_add_event(user):
+    return user.is_superuser or user.groups.filter(name__in=["Organizer", "Admin"]).exists()
+
+
 @login_required
-@user_passes_test(is_organizer)
+@user_passes_test(can_add_event)
 def add_event(request):
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
@@ -102,11 +115,18 @@ def add_event(request):
 
 
 @login_required
-@user_passes_test(is_participant)
 def all_events(request):
+    user = request.user
+    # Allow any logged in user to see events (participant, organizer, admin)
     events = Event.objects.select_related('category').prefetch_related('participants').order_by('-date', '-time')
-    return render(request, 'events/all_events.html', {'events': events})
+    
+    # Permission to add/edit event only for admins and organizers
+    can_add_event = user.is_superuser or user.groups.filter(name__in=["Organizer", "Admin"]).exists()
 
+    return render(request, 'events/all_events.html', {
+        'events': events,
+        'can_add_event': can_add_event,
+    })
 
 @login_required
 @user_passes_test(is_participant)
@@ -151,15 +171,18 @@ def delete_event(request, event_id):
     return render(request, 'events/delete_event_confirm.html', {'event': event})
 
 
+def is_organizer_or_admin(user):
+    return user.is_superuser or user.groups.filter(name__in=["Organizer", "Admin"]).exists()
+
 @login_required
-@user_passes_test(is_participant)
+@user_passes_test(is_organizer_or_admin)
 def category_list(request):
     categories = Category.objects.all()
     return render(request, 'categories/category_list.html', {'categories': categories})
 
 
 @login_required
-@user_passes_test(is_organizer)
+@user_passes_test(is_organizer_or_admin)
 def add_category(request):
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -172,7 +195,7 @@ def add_category(request):
 
 
 @login_required
-@user_passes_test(is_organizer)
+@user_passes_test(is_organizer_or_admin)
 def edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
@@ -186,7 +209,7 @@ def edit_category(request, category_id):
 
 
 @login_required
-@user_passes_test(is_organizer)
+@user_passes_test(is_organizer_or_admin)
 def delete_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':

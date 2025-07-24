@@ -20,6 +20,11 @@
       {% for event in events %}
         <div class="border p-4 rounded shadow">
           <h2 class="text-xl font-semibold">{{ event.name }}</h2>
+          {% if event.image %}
+            <img src="{{ event.image.url }}" alt="{{ event.name }}" class="w-full h-48 object-cover rounded mb-3">
+          {% else %}
+            <img src="{{ MEDIA_URL }}event_images/default.jpg" alt="Default Image" class="w-full h-48 object-cover rounded mb-3">
+          {% endif %}
           <p class="text-gray-600">{{ event.date }} at {{ event.time }}</p>
           <p>{{ event.description|default:"No description" }}</p>
         </div>
