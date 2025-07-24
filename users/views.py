@@ -20,6 +20,8 @@ from django.views import View
 from users.models import CustomUser
 from django.views.generic import DeleteView
 from django.views.generic import ListView
+from .forms import CustomPasswordResetForm  
+
 from django.contrib.auth.views import (
     PasswordChangeView,
     PasswordChangeDoneView,
@@ -409,6 +411,7 @@ class CustomPasswordResetView(PasswordResetView):
     email_template_name = "account/password_reset_email.html"
     subject_template_name = "account/password_reset_subject.txt"
     success_url = reverse_lazy("password_reset_done")
+    form_class = CustomPasswordResetForm 
 
 
 class CustomPasswordResetDoneView(PasswordResetDoneView):

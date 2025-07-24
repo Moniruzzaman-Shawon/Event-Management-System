@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, UserChangeForm, PasswordResetForm
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
@@ -62,4 +62,11 @@ class CustomAuthenticationForm(AuthenticationForm):
             'class': 'w-full border-b-2 border-gray-300 focus:border-blue-500 px-1 py-3 transition-all',
         }),
         label="Password"
+    )
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+    email = forms.EmailField(
+        label="Email Address",
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter your email'})
     )
